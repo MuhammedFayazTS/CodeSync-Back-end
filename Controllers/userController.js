@@ -1,5 +1,6 @@
 const User = require("../Model/userModel");
 const bcrypt = require("bcrypt");
+const passport = require("passport");
 
 // email password registration
 const register = async (req, res) => {
@@ -16,22 +17,23 @@ const register = async (req, res) => {
   res.status(201).json({ success: true, message: "User successfully registered" });
 };
 
-
-// login with email and password
-// const login = async (req, res, next) => {
-//   const { email, password } = req.body;
-//   const user = await User.findOne({ email });
-//   const isMatch = await bcrypt.compare(password, user.password);
-//   if (!isMatch) {
-//     return res
-//       .status(400)
-//       .json({ success: false, message: "Wrong email or password" });
-//   }
-
-//   res
-//     .status(200)
-//     .json({ success: true, message: "User successfully logged in" });
-// };
+// login using passport local
+const login = (req, res) => {
+  passport.authenticate('local', (err, user, info) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+    req.logIn(user, (err) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+      return res.status(200).json({ success: true });
+    });
+  })(req, res);
+};
 
 
 
@@ -57,6 +59,7 @@ const logout = (req, res, next) => {
 
 module.exports = {
   register,
+  login,
   myProfile,
   logout,
 };

@@ -5,10 +5,11 @@ const {
   logout,
   myProfile,
   register,
+  login,
 } = require("../Controllers/userController");
 const isAuthenticated = require("../Middleware/auth");
 
-// :: login ::
+// :: Authentication ::
 
 // Google Login
 router.get(
@@ -23,15 +24,11 @@ router.get(
   })
 );
 
-// LOCAL LOGIN
+// Passport - LOCAL Authentication
 router.post("/auth/register", register);
-router.post(
-  "/auth/login",
-  passport.authenticate("local", { failureRedirect: "/login" }),
-  function (req, res) {
-    res.redirect(`${process.env.FRONTEND_URL}`);
-  }
-);
+router.post('/auth/login', login);
+
+
 
 router.get("/me", isAuthenticated, myProfile);
 

@@ -1,9 +1,8 @@
 const passport = require("passport");
 const User = require("../Model/userModel");
-const LocalStrategy = require('passport-local').Strategy;
+const LocalStrategy = require("passport-local").Strategy;
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
-const bcrypt = require('bcrypt');
-
+const bcrypt = require("bcrypt");
 
 const connectPassport = () => {
   // google strategy
@@ -38,19 +37,13 @@ const connectPassport = () => {
     )
   );
 
-  passport.serializeUser((user, done) => {
-    done(null, user);
-  });
-
-  passport.deserializeUser(async (id, done) => {
-    const user = await User.findById(id);
-    done(null, user);
-  });
-
   // passport local strategy
   passport.use(
     new LocalStrategy(
-      { usernameField: "email" }, // Use 'email' as the username field
+      {
+        usernameField: "email",
+        passwordField: "password",
+      },
       async (email, password, done) => {
         try {
           const user = await User.findOne({ email });
@@ -58,16 +51,27 @@ const connectPassport = () => {
             return done(null, false);
           }
           const isMatch = await bcrypt.compare(password, user.password);
+
           if (!isMatch) {
             return done(null, false);
           }
+
           return done(null, user);
         } catch (error) {
-          return done(error);
+          return done(error, null);
         }
       }
     )
   );
+
+  passport.serializeUser((user, done) => {
+    done(null, user.id);
+  });
+
+  passport.deserializeUser(async (id, done) => {
+    const user = await User.findById(id).select("-password");
+    done(null, user);
+  });
 
 };
 

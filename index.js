@@ -10,15 +10,15 @@ require("dotenv").config();
 // db connection
 require("./config/connectDB");
 // routes
-const userRoutes = require('./Routes/userRoutes')
+const userRoutes = require("./Routes/userRoutes");
 // socket io
 const { Server } = require("socket.io");
-// socket manager 
-const socketEmitters = require('./Listeners/socketManagers');
-// passport js 
+// socket manager
+const socketEmitters = require("./Listeners/socketManagers");
+// passport js
 const passport = require("passport");
 const connectPassport = require("./Utils/Provider");
-// error middleware 
+// error middleware
 const errorMiddleware = require("./Middleware/errorMiddleWare");
 
 // express instance
@@ -36,51 +36,52 @@ const io = new Server(server, {
 });
 
 // :: app middlewares
-// cors
+// cors middleware setup
 app.use(
   cors({
-    origin: "http://localhost:5173",
-    methods: ["GET", "POST"],
+    origin: ["http://localhost:5173"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization'] 
   })
 );
 
 // json parser middleware
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // setup session middlewares
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,
   })
 );
 
-// error middleware
-app.use(errorMiddleware)
-
-app.use(cookieParser())
-
 // passport initialization
-app.use(passport.authenticate("session"))
 app.use(passport.initialize());
 app.use(passport.session());
 
 // google auth passport
-connectPassport()
+connectPassport();
+
+// cookie parser middleware
+app.use(cookieParser());
 
 // test route
-app.get('/',(req,res)=>{
-  res.send("API Working")
-})
+app.get("/", (req, res) => {
+  res.send("API Working");
+});
 
 // other routes
-app.use('/api/v1',userRoutes)
+app.use("/api/v1", userRoutes);
 
 // socket manager for emitter handling
 socketEmitters(io);
 
+// error middleware
+app.use(errorMiddleware);
 
 // port number
 const port = process.env.PORT || 5000;
