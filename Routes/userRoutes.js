@@ -3,9 +3,9 @@ const router = express.Router();
 const passport = require("passport");
 const {
   logout,
-  myProfile,
   register,
   login,
+  protectedData,
 } = require("../Controllers/userController");
 const isAuthenticated = require("../Middleware/auth");
 
@@ -30,7 +30,7 @@ router.post('/auth/login', login);
 
 
 
-router.get("/me", isAuthenticated, myProfile);
+router.get("/protected-route", isAuthenticated, protectedData);
 
 router.get("/logout", logout);
 

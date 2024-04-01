@@ -37,13 +37,14 @@ const login = (req, res) => {
 
 
 
-const myProfile = (req, res) => {
+const protectedData = (req, res) => {
   if (req.user) {
-    res.status(200).json({ message: "User login Successfull", user: req.user });
+    res.status(200).json({ success: true, message: "Successfully accessed protected data", data: req.user });
   } else {
-    res.status(401).json({ message: "Not Authorized" });
+    res.status(401).json({ success: false, message: "Unauthorized access" });
   }
 };
+
 
 const logout = (req, res, next) => {
   req.session.destroy((err) => {
@@ -60,6 +61,6 @@ const logout = (req, res, next) => {
 module.exports = {
   register,
   login,
-  myProfile,
+  protectedData,
   logout,
 };
