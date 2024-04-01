@@ -1,6 +1,10 @@
 // :: imports
 const express = require("express");
+const http = require("http");
 const cors = require("cors");
+const session = require("express-session");
+const cookieParser = require("cookie-parser");
+
 // dot env config
 require("dotenv").config();
 // db connection
@@ -11,14 +15,15 @@ const userRoutes = require('./Routes/userRoutes')
 const { Server } = require("socket.io");
 // socket manager 
 const socketEmitters = require('./Listeners/socketManagers');
-
+// passport js 
+const passport = require("passport");
+const connectPassport = require("./Utils/Provider");
+// error middleware 
+const errorMiddleware = require("./Middleware/errorMiddleWare");
 
 // express instance
 const app = express();
 // http server instance
-const http = require("http");
-const session = require("express-session");
-const passport = require("passport");
 const server = http.createServer(app);
 
 // new socket instance
@@ -46,29 +51,32 @@ app.use(express.json());
 // setup session middlewares
 app.use(
   session({
-    secret: "sample-secret",
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: true,
   })
 );
 
+// error middleware
+app.use(errorMiddleware)
+
+app.use(cookieParser())
+
 // passport initialization
+app.use(passport.authenticate("session"))
 app.use(passport.initialize());
 app.use(passport.session());
 
-// auth middleware
-require('./Middleware/auth')
+// google auth passport
+connectPassport()
 
-// initial google auth login
-app.get("/auth/google",passport.authenticate("google",{scope:["profile","email"]}))
-
-app.get("/auth/google/callback",passport.authenticate("google",{
-  successRedirect:`${process.env.CLIENT_URL}`,
-  failureRedirect:`${process.env.CLIENT}/sign-in`,
-}))
+// test route
+app.get('/',(req,res)=>{
+  res.send("API Working")
+})
 
 // other routes
-app.use('/api/user',userRoutes)
+app.use('/api/v1',userRoutes)
 
 // socket manager for emitter handling
 socketEmitters(io);
