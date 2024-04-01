@@ -1,9 +1,12 @@
 const passport = require("passport");
 const User = require("../Model/userModel");
-
+const LocalStrategy = require('passport-local').Strategy;
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
+const bcrypt = require('bcrypt');
+
 
 const connectPassport = () => {
+  // google strategy
   passport.use(
     new GoogleStrategy(
       {
@@ -12,7 +15,7 @@ const connectPassport = () => {
         callbackURL: process.env.GOOGLE_CALLBACK_URL,
         scope: ["profile", "email"],
       },
-      async (accessToken, refreshToken, profile, cb) => {
+      async (accessToken, refreshToken, profile, done) => {
         try {
           let user = await User.findOne({ googleId: profile.id });
 
@@ -27,9 +30,9 @@ const connectPassport = () => {
             await user.save();
           }
 
-          return cb(null, user);
+          return done(null, user);
         } catch (error) {
-          return cb(error, null);
+          return done(error, null);
         }
       }
     )
@@ -44,7 +47,28 @@ const connectPassport = () => {
     done(null, user);
   });
 
+  // passport local strategy
+  passport.use(
+    new LocalStrategy(
+      { usernameField: "email" }, // Use 'email' as the username field
+      async (email, password, done) => {
+        try {
+          const user = await User.findOne({ email });
+          if (!user) {
+            return done(null, false);
+          }
+          const isMatch = await bcrypt.compare(password, user.password);
+          if (!isMatch) {
+            return done(null, false);
+          }
+          return done(null, user);
+        } catch (error) {
+          return done(error);
+        }
+      }
+    )
+  );
+
 };
 
-
-module.exports = connectPassport
+module.exports = connectPassport;
