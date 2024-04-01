@@ -3,7 +3,6 @@ const { Schema, model, models } = require("mongoose");
 const UserSchema = new Schema({
   googleId: {
     type: String,
-    unique: true,
   },
   email: {
     type: String,
@@ -18,6 +17,7 @@ const UserSchema = new Schema({
   },
   image: {
     type: String,
+    default:"https://img.icons8.com/fluency/96/guest-male--v1.png"
   },
 },
 {
